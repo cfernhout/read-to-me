@@ -8,7 +8,7 @@ AI coding tools generate more text than you can read — specs, plans, code revi
 
 - [edge-tts](https://github.com/rany2/edge-tts) — Microsoft Edge's TTS engine (free, no API key)
 - [mpv](https://mpv.io) — media player
-- [xclip](https://github.com/astrand/xclip) — clipboard access (optional, for aliases)
+- [xclip](https://github.com/astrand/xclip) — clipboard access (optional, for `-c` flag)
 
 ## Install
 
@@ -27,18 +27,26 @@ chmod +x ~/.local/bin/read-to-me
 # Read a file
 read-to-me document.md
 
+# Read from clipboard
+read-to-me -c
+
 # Read from stdin
 cat notes.txt | read-to-me
-echo "Hello world" | read-to-me
+
+# Strip markdown formatting (auto-enabled for .md files)
+read-to-me -m file.txt
 
 # Speed control (1.0 = normal, 1.5 = 50% faster)
 read-to-me -s 1.3 document.md
+
+# Combine flags
+read-to-me -c -m -s 1.5
 
 # Stop playback
 read-to-me --stop
 ```
 
-Markdown files (`.md`) are automatically cleaned — code blocks, tables, and formatting are stripped for natural speech.
+Markdown files (`.md`) are automatically cleaned — code blocks, tables, and formatting are stripped for natural speech. Use `-m` to force this on non-markdown input.
 
 ## Shell aliases
 
@@ -55,7 +63,8 @@ tts file.md          # read a file
 tts -s 1.5 file.md   # read faster
 cts                   # read clipboard
 cts -s 1.3            # read clipboard faster
-mts                   # read clipboard with extra markdown cleaning
+mts                   # read clipboard with markdown cleaning
+mts -s 1.5            # read clipboard with markdown cleaning, faster
 read-to-me --stop     # stop playback
 ```
 
