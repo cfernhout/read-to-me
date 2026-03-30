@@ -7,6 +7,8 @@ VOICE="${VOICE:-en-US-AriaNeural}"
 PIDFILE="/tmp/read-to-me.pid"
 TMPFILE="/tmp/read-to-me.mp3"
 SPEED="+0%"
+FROM_CLIPBOARD=false
+STRIP_MD=false
 
 stop_playback() {
     if [[ -f "$PIDFILE" ]]; then
@@ -17,15 +19,15 @@ stop_playback() {
 
 usage() {
     cat <<'EOF'
-Usage: read-to-me [-s SPEED] [FILE]
+Usage: read-to-me [-s SPEED] [-c] [-m] [FILE]
        read-to-me --stop
-       command | read-to-me [-s SPEED]
+       command | read-to-me [-s SPEED] [-m]
 
 Options:
   -s SPEED   Speed multiplier (default: 1.0, e.g. 1.5 = 50% faster)
+  -c         Read from clipboard
+  -m         Strip markdown formatting (auto-enabled for .md files)
   --stop     Stop current playback
-
-Markdown files (.md) are automatically cleaned for natural speech.
 EOF
     exit 0
 }
@@ -37,23 +39,31 @@ if [[ "${1:-}" == "--stop" ]]; then
     exit 0
 fi
 
-if [[ "${1:-}" == "-s" ]]; then
-    SPEED=$(awk "BEGIN { pct = ($2 - 1) * 100; printf \"%+d%%\", pct }")
-    shift 2
-fi
+# Parse flags
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -s) SPEED=$(awk "BEGIN { pct = ($2 - 1) * 100; printf \"%+d%%\", pct }"); shift 2 ;;
+        -c) FROM_CLIPBOARD=true; shift ;;
+        -m) STRIP_MD=true; shift ;;
+        *)  break ;;
+    esac
+done
 
 # Kill previous playback
 stop_playback
 
-# Read from file or stdin
-if [[ -n "${1:-}" && -f "$1" ]]; then
+# Read input
+if [[ "$FROM_CLIPBOARD" == true ]]; then
+    INPUT=$(xclip -selection clipboard -o)
+elif [[ -n "${1:-}" && -f "$1" ]]; then
     INPUT=$(cat "$1")
+    [[ "$1" == *.md ]] && STRIP_MD=true
 else
     INPUT=$(cat)
 fi
 
 # Strip markdown formatting for natural speech
-if [[ "${1:-}" == *.md ]]; then
+if [[ "$STRIP_MD" == true ]]; then
     TEXT=$(echo "$INPUT" | sed \
         -e '/^---$/,/^---$/d'          \
         -e '/^```/,/^```/d'            \
